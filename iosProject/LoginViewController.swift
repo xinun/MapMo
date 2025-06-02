@@ -11,7 +11,6 @@ class LoginViewController: UIViewController {
         setupGoogleLoginButton()
     }
 
-    // 🔽 여기 아래에 함수 추가!
     @objc func handleGoogleSignIn() {
         print("🟢 Google 버튼 눌림") // ← 이게 안 뜨면 버튼이 안 눌리는 상태!
 
