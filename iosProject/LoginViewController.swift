@@ -2,6 +2,7 @@ import UIKit
 import Firebase
 import GoogleSignIn
 import FirebaseAuth
+import FirebaseFirestore
 
 class LoginViewController: UIViewController {
 
@@ -40,10 +41,16 @@ class LoginViewController: UIViewController {
                     print("❌ Firebase 로그인 실패: \(error.localizedDescription)")
                 } else {
                     print("✅ 로그인 성공")
+                    if let user = Auth.auth().currentUser {
+                        self.saveUserToFirestore(user: user)
+                        self.moveToMainTabBar()
+                    }
+
                     self.moveToMainTabBar()
                 }
             }
         }
+        
     }
 
     func setupGoogleLoginButton() {
@@ -70,6 +77,25 @@ class LoginViewController: UIViewController {
         if let tabBarVC = storyboard.instantiateViewController(withIdentifier: "TabBarController") as? UITabBarController {
             tabBarVC.modalPresentationStyle = .fullScreen
             self.present(tabBarVC, animated: true)
+        }
+    }
+    func saveUserToFirestore(user: User) {
+        let db = Firestore.firestore()
+        
+        let userData: [String: Any] = [
+            "uid": user.uid,     //구글 아이디로 생성 되는 유저 아이디 값
+            "email": user.email ?? "",
+            "displayName": user.displayName ?? "",  //구글 아이디
+            "photoURL": user.photoURL?.absoluteString ?? "",  //구글 포토 사진 값
+            "createdAt": FieldValue.serverTimestamp()
+        ]
+        
+        db.collection("users").document(user.uid).setData(userData, merge: true) { error in
+            if let error = error {
+                print("❌ Firestore 저장 실패: \(error.localizedDescription)")
+            } else {
+                print("✅ Firestore에 사용자 정보 저장 완료")
+            }
         }
     }
 }
