@@ -2,16 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>com.googleusercontent.apps.740078932134-kr5avl2ab28e19kforegm0leid1ui0ri</string>
-            </array>
-        </dict>
-    </array>
-
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>NMFNcpKeyId</key>
+			<string>koc23bd00a</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.740078932134-kr5avl2ab28e19kforegm0leid1ui0ri</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
