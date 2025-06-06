@@ -8,6 +8,7 @@
 import UIKit
 import FirebaseCore
 import Firebase
+import NMapsMap
 
 
 @main
@@ -17,6 +18,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         FirebaseApp.configure() //앱 시작시 firebase 연결
+        NMFAuthManager.shared().ncpKeyId = "2bd5gp4k59"
+
         return true
     }
 

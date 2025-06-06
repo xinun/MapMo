@@ -2,17 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NAVER_CLIENT_ID</key>
+	<string>2bd5gp4k59</string>
+	<key>NAVER_CLIENT_SECRET</key>
+	<string>yJaqLU8GJMf3Y3TqsFxWw5FpTqK69Nc6BlC4IeuT</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
-			<key>NMFNcpKeyId</key>
-			<string>koc23bd00a</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.740078932134-kr5avl2ab28e19kforegm0leid1ui0ri</string>
+				<string>com.googleusercontent.apps.zz-kr5avl2ab28e19kforegm0leid1ui0ri</string>
 			</array>
 		</dict>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>현재 위치를 확인하기 위해 위치 권한이 필요합니다.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
