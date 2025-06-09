@@ -1,102 +1,457 @@
 import UIKit
+import FirebaseAuth
+import FirebaseFirestore
 
-class EditViewController2: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
+// UITextView의 Placeholder 기능을 위해 Delegate 채택
+class EditViewController3: UIViewController, UITextViewDelegate {
 
-    let themeSections: [DiaryThemeSection] = [
-        DiaryThemeSection(question: "오늘의 기분은?", options: [
-            DiaryThemeOption(title: "기쁨", iconName: "face.smiling"),
-            DiaryThemeOption(title: "슬픔", iconName: "cloud.drizzle"),
-            DiaryThemeOption(title: "신남", iconName: "sun.max")
-        ]),
-        DiaryThemeSection(question: "오늘은 어떤 하루였나요?", options: [
-            DiaryThemeOption(title: "한가함", iconName: "leaf"),
-            DiaryThemeOption(title: "바쁨", iconName: "flame")
-        ])
-    ]
+    // MARK: - Properties
+    
+    var selectedTags: [String] = []
 
-    // 선택된 index 저장용
-    var selectedIndices: [Int: Int] = [:]
+    // MARK: - UI Components
+    
+    private let dateLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.textColor = .systemGray
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy년 M월 d일"
+        label.text = formatter.string(from: Date())
+        return label
+    }()
+    
+    private lazy var tagsLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.textColor = .systemGray2
+        label.text = selectedTags.map { "#\($0)" }.joined(separator: " ")
+        return label
+    }()
+    
+    private let titleField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "제목"
+        textField.font = .systemFont(ofSize: 24, weight: .bold)
+        textField.borderStyle = .none
+        return textField
+    }()
+    
+    private let separatorView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemGray5
+        return view
+    }()
+    
+    private lazy var contentTextView: UITextView = {
+        let textView = UITextView()
+        textView.font = .systemFont(ofSize: 17)
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
+        textView.text = "어떤 일이 있었나요? 오늘의 감정과 생각을 자유롭게 기록해보세요."
+        textView.textColor = .systemGray3
+        textView.delegate = self
+        return textView
+    }()
+    
+    private lazy var saveButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("일기 저장하기", for: .normal)
+        button.titleLabel?.font = .boldSystemFont(ofSize: 18)
+        button.backgroundColor = UIColor(red: 88/255, green: 86/255, blue: 214/255, alpha: 1.0) // Soft Indigo
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 14
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 4)
+        button.layer.shadowRadius = 8.0
+        button.layer.shadowOpacity = 0.2
+        button.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
+        return button
+    }()
 
+    // --- 로딩 UI 컴포넌트 ---
+    private let overlayView = UIView()
+    private let loadingContainerView = UIView()
+    private let activityIndicator = UIActivityIndicatorView(style: .large)
+    private let loadingLabel = UILabel()
+    private let percentageLabel = UILabel()
+    
+    private var progressTimer: Timer?
+    private var currentProgress: Int = 0
+    
+    private var saveButtonBottomConstraint: NSLayoutConstraint?
+
+    // MARK: - Lifecycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
+        setupUI()
+        setupKeyboardObservers()
+        self.view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard)))
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
 
-        var previousBottom: NSLayoutYAxisAnchor = view.safeAreaLayoutGuide.topAnchor
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        showLoading()
+        generateDiary(from: selectedTags) { [weak self] diaryText in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.hideLoading {
+                    if let diaryText = diaryText, !diaryText.contains("❌") {
+                        let (title, content) = self.splitTitleAndContent(from: diaryText)
+                        self.titleField.text = title
+                        self.contentTextView.text = content
+                        self.contentTextView.textColor = .label
+                    } else {
+                        self.titleField.text = "❌ 일기 생성 실패"
+                        self.contentTextView.text = "API 호출에 실패했습니다.\nXcode 콘솔의 에러 메시지를 확인해주세요."
+                        self.contentTextView.textColor = .systemRed
+                    }
+                }
+            }
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        progressTimer?.invalidate()
+        progressTimer = nil
+    }
 
-        for (index, section) in themeSections.enumerated() {
-            let questionLabel = UILabel()
-            questionLabel.text = section.question
-            questionLabel.font = .boldSystemFont(ofSize: 18)
-            questionLabel.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(questionLabel)
+    // MARK: - UI Setup
+    
+    private func setupUI() {
+        [dateLabel, tagsLabel, titleField, separatorView, contentTextView, saveButton].forEach {
+            view.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        setupLoadingUI()
+        
+        saveButtonBottomConstraint = saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20)
+        
+        NSLayoutConstraint.activate([
+            dateLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            dateLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            dateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            tagsLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 4),
+            tagsLabel.leadingAnchor.constraint(equalTo: dateLabel.leadingAnchor),
+            tagsLabel.trailingAnchor.constraint(equalTo: dateLabel.trailingAnchor),
 
-            NSLayoutConstraint.activate([
-                questionLabel.topAnchor.constraint(equalTo: previousBottom, constant: 24),
-                questionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16)
-            ])
-
-            let layout = UICollectionViewFlowLayout()
-            layout.scrollDirection = .horizontal
-            layout.itemSize = CGSize(width: 120, height: 40)
-            layout.minimumLineSpacing = 8
-
-            let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-            collectionView.translatesAutoresizingMaskIntoConstraints = false
-            collectionView.backgroundColor = .clear
-            collectionView.tag = index
-            collectionView.dataSource = self
-            collectionView.delegate = self
-            collectionView.register(TagCell.self, forCellWithReuseIdentifier: "TagCell")
-
-            view.addSubview(collectionView)
-
-            NSLayoutConstraint.activate([
-                collectionView.topAnchor.constraint(equalTo: questionLabel.bottomAnchor, constant: 8),
-                collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                collectionView.heightAnchor.constraint(equalToConstant: 50)
-            ])
-
-            previousBottom = collectionView.bottomAnchor
+            titleField.topAnchor.constraint(equalTo: tagsLabel.bottomAnchor, constant: 16),
+            titleField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            titleField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            separatorView.topAnchor.constraint(equalTo: titleField.bottomAnchor, constant: 12),
+            separatorView.leadingAnchor.constraint(equalTo: titleField.leadingAnchor),
+            separatorView.trailingAnchor.constraint(equalTo: titleField.trailingAnchor),
+            separatorView.heightAnchor.constraint(equalToConstant: 1),
+            
+            contentTextView.topAnchor.constraint(equalTo: separatorView.bottomAnchor, constant: 16),
+            contentTextView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            contentTextView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            contentTextView.bottomAnchor.constraint(equalTo: saveButton.topAnchor, constant: -20),
+            
+            saveButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            saveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            saveButton.heightAnchor.constraint(equalToConstant: 52),
+            saveButtonBottomConstraint!,
+        ])
+    }
+    
+    // MARK: - Keyboard & TextView Delegate
+    
+    private func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+    
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        guard let userInfo = notification.userInfo,
+              let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
+        
+        let newBottomConstant = -keyboardFrame.height + view.safeAreaInsets.bottom
+        
+        UIView.animate(withDuration: duration) {
+            self.saveButtonBottomConstraint?.constant = newBottomConstant
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        guard let userInfo = notification.userInfo,
+              let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
+        
+        UIView.animate(withDuration: duration) {
+            self.saveButtonBottomConstraint?.constant = -20
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        if textView.textColor == .systemGray3 {
+            textView.text = nil
+            textView.textColor = .label
+        }
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if textView.text.isEmpty {
+            textView.text = "어떤 일이 있었나요? 오늘의 감정과 생각을 자유롭게 기록해보세요."
+            textView.textColor = .systemGray3
         }
     }
 
-    // MARK: - UICollectionViewDataSource
-
-    func numberOfSections(in collectionView: UICollectionView) -> Int { 1 }
-
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return themeSections[collectionView.tag].options.count
+    // MARK: - Loading Indicator Methods
+    
+    private func setupLoadingUI() {
+        overlayView.backgroundColor = UIColor(white: 0, alpha: 0.4)
+        loadingContainerView.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        loadingContainerView.layer.cornerRadius = 16
+        activityIndicator.color = .white
+        loadingLabel.text = "AI가 일기를 생성 중입니다..."
+        loadingLabel.textColor = .white
+        loadingLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        percentageLabel.textColor = .white
+        percentageLabel.font = .monospacedDigitSystemFont(ofSize: 14, weight: .regular)
+        
+        [overlayView, loadingContainerView].forEach { view.addSubview($0); $0.translatesAutoresizingMaskIntoConstraints = false }
+        [activityIndicator, loadingLabel, percentageLabel].forEach { loadingContainerView.addSubview($0); $0.translatesAutoresizingMaskIntoConstraints = false }
+        
+        NSLayoutConstraint.activate([
+            overlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            overlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            overlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            loadingContainerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingContainerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            loadingContainerView.widthAnchor.constraint(equalToConstant: 250),
+            activityIndicator.topAnchor.constraint(equalTo: loadingContainerView.topAnchor, constant: 20),
+            activityIndicator.centerXAnchor.constraint(equalTo: loadingContainerView.centerXAnchor),
+            loadingLabel.topAnchor.constraint(equalTo: activityIndicator.bottomAnchor, constant: 12),
+            loadingLabel.centerXAnchor.constraint(equalTo: loadingContainerView.centerXAnchor),
+            percentageLabel.topAnchor.constraint(equalTo: loadingLabel.bottomAnchor, constant: 8),
+            percentageLabel.centerXAnchor.constraint(equalTo: loadingContainerView.centerXAnchor),
+            percentageLabel.bottomAnchor.constraint(equalTo: loadingContainerView.bottomAnchor, constant: -20)
+        ])
+        
+        overlayView.isHidden = true
+        loadingContainerView.isHidden = true
     }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let option = themeSections[collectionView.tag].options[indexPath.item]
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TagCell", for: indexPath) as! TagCell
-        let isSelected = selectedIndices[collectionView.tag] == indexPath.item
-        cell.configure(with: option, selected: isSelected)
-        return cell
+    
+    private func showLoading() {
+        currentProgress = 0
+        percentageLabel.text = "\(currentProgress)%"
+        overlayView.alpha = 0
+        loadingContainerView.alpha = 0
+        loadingContainerView.transform = CGAffineTransform(scaleX: 1.3, y: 1.3)
+        overlayView.isHidden = false
+        loadingContainerView.isHidden = false
+        activityIndicator.startAnimating()
+        
+        UIView.animate(withDuration: 0.3) {
+            self.overlayView.alpha = 1
+            self.loadingContainerView.alpha = 1
+            self.loadingContainerView.transform = .identity
+        }
+        
+        progressTimer = Timer.scheduledTimer(timeInterval: 0.15, target: self, selector: #selector(updateProgress), userInfo: nil, repeats: true)
     }
-
-    // MARK: - UICollectionViewDelegate
-
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        selectedIndices[collectionView.tag] = indexPath.item
-        collectionView.reloadData()
-    }
-    func getSelectedOptions() -> [String] {
-        return selectedIndices.compactMap { (sectionIndex, itemIndex) in
-            themeSections[sectionIndex].options[itemIndex].title
+    
+    @objc private func updateProgress() {
+        if currentProgress < 99 {
+            currentProgress += Int.random(in: 1...2)
+            currentProgress = min(currentProgress, 99)
+            percentageLabel.text = "\(currentProgress)%"
+        } else {
+            progressTimer?.invalidate()
+            progressTimer = nil
         }
     }
 
-}
-// MARK: - 데이터 모델 정의
-struct DiaryThemeOption {
-    let title: String
-    let iconName: String
+    private func hideLoading(completion: @escaping () -> Void) {
+        progressTimer?.invalidate()
+        progressTimer = nil
+        currentProgress = 100
+        percentageLabel.text = "\(currentProgress)%"
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            UIView.animate(withDuration: 0.3, animations: {
+                self.overlayView.alpha = 0
+                self.loadingContainerView.alpha = 0
+            }) { _ in
+                self.activityIndicator.stopAnimating()
+                self.overlayView.isHidden = true
+                self.loadingContainerView.isHidden = true
+                completion()
+            }
+        }
+    }
+    
+    // MARK: - Actions & Methods
+    
+    @objc private func saveButtonTapped() {
+        let title = titleField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "제목 없음"
+        let content = contentTextView.text ?? ""
+
+        guard !content.isEmpty, contentTextView.textColor != .systemGray3 else {
+            print("⚠️ 내용이 비어있음")
+            return
+        }
+        
+        saveButton.isEnabled = false
+        saveDiaryToFirestore(title: title, content: content, tags: selectedTags) { [weak self] success in
+            DispatchQueue.main.async {
+                self?.saveButton.isEnabled = true
+                if success { self?.showSaveConfirmation() }
+            }
+        }
+    }
+
+    private func showSaveConfirmation() {
+        let alert = UIAlertController(title: "저장 완료", message: "일기가 저장되었습니다.", preferredStyle: .alert)
+
+        alert.addAction(UIAlertAction(title: "확인", style: .default, handler: { _ in
+            
+            // 💡 앱의 화면을 관리하는 SceneDelegate를 가져옵니다.
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let sceneDelegate = windowScene.delegate as? SceneDelegate else {
+                return
+            }
+            
+            // ✅ 1. 스토리보드에서 TabBarController를 새로 생성합니다.
+            //    (스토리보드 파일 이름이 'Main.storyboard'가 아니라면 해당 이름으로 수정해주세요)
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            let tabBarController = storyboard.instantiateViewController(withIdentifier: "TabBarController") as! TabBarController
+            
+            // ✅ 2. 원하는 탭으로 이동시킵니다. (두 번째 탭)
+            tabBarController.selectedIndex = 1
+            
+            // ✅ 3. 앱의 메인 화면(root)을 이 TabBarController로 교체합니다.
+            sceneDelegate.window?.rootViewController = tabBarController
+            sceneDelegate.window?.makeKeyAndVisible()
+            
+            // 부드러운 화면 전환 효과를 줍니다.
+            if let window = sceneDelegate.window {
+                UIView.transition(with: window,
+                                  duration: 0.3,
+                                  options: .transitionCrossDissolve,
+                                  animations: nil,
+                                  completion: nil)
+            }
+        }))
+        
+        present(alert, animated: true)
+    }
+
+
+    private func splitTitleAndContent(from text: String) -> (title: String, content: String) {
+        let lines = text.components(separatedBy: .newlines)
+        if let titleLine = lines.first(where: { $0.hasPrefix("제목:") }) {
+            let title = titleLine.replacingOccurrences(of: "제목:", with: "").trimmingCharacters(in: .whitespaces)
+            let content = lines.dropFirst().joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+            return (title, content)
+        }
+        return ("일기", text)
+    }
+
+    // MARK: - Firebase & API
+    
+    private func saveDiaryToFirestore(title: String, content: String, tags: [String], completion: @escaping (Bool) -> Void) {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            completion(false)
+            return
+        }
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).collection("diaries").addDocument(data: ["title": title, "content": content, "tags": tags, "createdAt": Timestamp()]) { error in
+            if let error = error {
+                print("❌ 저장 실패: \(error.localizedDescription)")
+                completion(false)
+            } else {
+                print("✅ 일기 저장 완료")
+                completion(true)
+            }
+        }
+    }
+
+    private func generateDiary(from tags: [String], completion: @escaping (String?) -> Void) {
+        let prompt = """
+        아래 키워드들을 바탕으로 감성적인 오늘 하루의 일기를 작성해줘.
+        일기는 태그별로 1~2 문장으로 요약해서 작성해줘.
+        첫 문장은 '제목: ~' 형식으로 해주고, 본문은 자연스럽고 부드럽게 써줘.
+        오늘의 태그: \(tags.joined(separator: ", "))
+        """
+        let messages = [GPTMessage(role: "user", content: prompt)]
+        let request = GPTRequest(model: "gpt-4o", messages: messages)
+
+        guard let url = URL(string: "https://api.openai.com/v1/chat/completions"),
+              let apiKey = Bundle.main.infoDictionary?["GPT_API_KEY"] as? String else {
+            print("❌ API URL 또는 키 없음. Info.plist를 확인하세요.")
+            completion(nil)
+            return
+        }
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            urlRequest.httpBody = try JSONEncoder().encode(request)
+        } catch {
+            print("❌ 인코딩 실패: \(error)")
+            completion(nil)
+            return
+        }
+
+        URLSession.shared.dataTask(with: urlRequest) { data, response, error in
+            if let error = error {
+                print("❌ 네트워크 에러: \(error.localizedDescription)")
+                completion(nil)
+                return
+            }
+            guard let data = data else {
+                print("❌ 데이터 없음")
+                completion(nil)
+                return
+            }
+            if let decoded = try? JSONDecoder().decode(GPTResponse.self, from: data),
+               let diary = decoded.choices.first?.message.content {
+                completion(diary)
+            } else {
+                let responseString = String(data: data, encoding: .utf8) ?? "디코딩 불가"
+                print("❌ GPT 응답이 올바르지 않습니다. 응답 내용: \(responseString)")
+                completion("❌ GPT 응답이 올바르지 않습니다.")
+            }
+        }.resume()
+    }
 }
 
-struct DiaryThemeSection {
-    let question: String
-    let options: [DiaryThemeOption]
+// MARK: - GPT Data Models
+
+struct GPTRequest: Codable {
+    let model: String
+    let messages: [GPTMessage]
+}
+
+struct GPTMessage: Codable {
+    let role: String
+    let content: String
+}
+
+struct GPTResponse: Codable {
+    struct Choice: Codable {
+        let message: GPTMessage
+    }
+    let choices: [Choice]
 }
