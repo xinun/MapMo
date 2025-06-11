@@ -1,6 +1,7 @@
 import UIKit
 import FirebaseAuth
 import FirebaseFirestore
+import NMapsMap
 
 // UITextView의 Placeholder 기능을 위해 Delegate 채택
 class EditViewController3: UIViewController, UITextViewDelegate {
@@ -8,7 +9,8 @@ class EditViewController3: UIViewController, UITextViewDelegate {
     // MARK: - Properties
     
     var selectedTags: [String] = []
-
+    var locationInfo: LocationInfo?
+       var coordinates: NMGLatLng?
     // MARK: - UI Components
     
     private let dateLabel: UILabel = {
@@ -97,8 +99,13 @@ class EditViewController3: UIViewController, UITextViewDelegate {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        guard let locationInfo = self.locationInfo else {
+              print("⚠️ 위치 정보가 없어 일기를 생성할 수 없습니다.")
+              // 필요하다면 사용자에게 알림 표시
+              return
+          }
         showLoading()
-        generateDiary(from: selectedTags) { [weak self] diaryText in
+        generateDiary(from: selectedTags, locationInfo: locationInfo) { [weak self] diaryText in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 self.hideLoading {
@@ -308,9 +315,13 @@ class EditViewController3: UIViewController, UITextViewDelegate {
             print("⚠️ 내용이 비어있음")
             return
         }
-        
+        guard let locationInfo = locationInfo, let coordinates = coordinates else {
+                 print("⚠️ 위치 정보 또는 좌표가 전달되지 않았습니다.")
+                 // 사용자에게 알림을 띄워주는 것이 좋습니다.
+                 return
+             }
         saveButton.isEnabled = false
-        saveDiaryToFirestore(title: title, content: content, tags: selectedTags) { [weak self] success in
+        saveDiaryToFirestore(title: title, content: content, tags: selectedTags, locationInfo: locationInfo, coordinates: coordinates) { [weak self] success in
             DispatchQueue.main.async {
                 self?.saveButton.isEnabled = true
                 if success { self?.showSaveConfirmation() }
@@ -367,13 +378,24 @@ class EditViewController3: UIViewController, UITextViewDelegate {
 
     // MARK: - Firebase & API
     
-    private func saveDiaryToFirestore(title: String, content: String, tags: [String], completion: @escaping (Bool) -> Void) {
+    private func saveDiaryToFirestore(title: String, content: String, tags: [String], locationInfo: LocationInfo, coordinates: NMGLatLng, completion: @escaping (Bool) -> Void) {
         guard let userId = Auth.auth().currentUser?.uid else {
             completion(false)
             return
         }
+        let geoPoint = GeoPoint(latitude: coordinates.lat, longitude: coordinates.lng)
+        let data: [String: Any] = [
+                "title": title,
+                "content": content,
+                "tags": tags,
+                "createdAt": Timestamp(),
+                "locationTitle": locationInfo.title,
+                "locationSubtitle": locationInfo.subtitle ?? "",
+                "geoPoint": geoPoint // GeoPoint 저장
+            ]
         let db = Firestore.firestore()
-        db.collection("users").document(userId).collection("diaries").addDocument(data: ["title": title, "content": content, "tags": tags, "createdAt": Timestamp()]) { error in
+        // 👈 모든 정보가 담긴 'data' 변수를 사용하도록 수정
+        db.collection("users").document(userId).collection("diaries").addDocument(data: data) { error in
             if let error = error {
                 print("❌ 저장 실패: \(error.localizedDescription)")
                 completion(false)
@@ -384,12 +406,21 @@ class EditViewController3: UIViewController, UITextViewDelegate {
         }
     }
 
-    private func generateDiary(from tags: [String], completion: @escaping (String?) -> Void) {
+    private func generateDiary(from tags: [String], locationInfo: LocationInfo, completion: @escaping (String?) -> Void) {
         let prompt = """
-        아래 키워드들을 바탕으로 감성적인 오늘 하루의 일기를 작성해줘.
-        일기는 태그별로 1~2 문장으로 요약해서 작성해줘.
-        첫 문장은 '제목: ~' 형식으로 해주고, 본문은 자연스럽고 부드럽게 써줘.
-        오늘의 태그: \(tags.joined(separator: ", "))
+        아래 키워드와 장소 정보를 바탕으로 감성적인 오늘 하루의 일기를 작성해줘.
+        일기는 태그별로 1~2 문장으로 요약하고, 전체적으로 자연스럽고 부드러운 문체로 써줘.
+        첫 문장은 '제목: ~' 형식으로 시작해줘.
+
+        [오늘의 태그]
+        \(tags.joined(separator: ", "))
+
+        [오늘의 장소]
+        \(locationInfo.title)
+
+        [장소 활용법]
+        - 만약 '오늘의 장소'가 공원, 궁궐, 관광지, 특별한 카페나 식당처럼 구체적인 활동을 연상할 수 있는 곳이라면, 그 장소에서의 경험을 상상해서 일기에 자연스럽게 녹여내 줘.
+        - 만약 '오늘의 장소'가 아파트, 일반 빌딩, 또는 그냥 주소처럼 구체적인 활동을 떠올리기 힘든 곳이라면, 그 장소 자체보다는 그 '주변의 가볼 만한 곳'이나 '인기 있는 장소'를 자유롭게 상상해서 그곳에서의 경험을 일기에 포함시켜 줘.
         """
         let messages = [GPTMessage(role: "user", content: prompt)]
         let request = GPTRequest(model: "gpt-4o", messages: messages)

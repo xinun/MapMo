@@ -43,7 +43,7 @@ class LoginViewController: UIViewController {
                     print("✅ 로그인 성공")
                     if let user = Auth.auth().currentUser {
                         self.saveUserToFirestore(user: user)
-                        self.moveToMainTabBar()
+                  
                     }
 
                     self.moveToMainTabBar()
@@ -72,11 +72,29 @@ class LoginViewController: UIViewController {
         ])
     }
 
+    // ✅ 위에서 삭제한 자리에 이 새 함수를 붙여넣으세요.
     func moveToMainTabBar() {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        if let tabBarVC = storyboard.instantiateViewController(withIdentifier: "TabBarController") as? UITabBarController {
-            tabBarVC.modalPresentationStyle = .fullScreen
-            self.present(tabBarVC, animated: true)
+        // 1. 현재 앱의 SceneDelegate를 가져옵니다.
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let sceneDelegate = windowScene.delegate as? SceneDelegate else {
+            print("❌ SceneDelegate를 찾을 수 없습니다.")
+            return
+        }
+
+        // 2. 스토리보드에서 TabBarController를 인스턴스화합니다.
+        let storyboard = UIStoryboard(name: "Main", bundle: nil) // 스토리보드 파일 이름이 "Main"이 아니라면 수정해주세요.
+        let tabBarController = storyboard.instantiateViewController(withIdentifier: "TabBarController")
+
+        // 3. window의 rootViewController를 교체하여 화면을 전환합니다.
+        sceneDelegate.window?.rootViewController = tabBarController
+
+        // 4. 부드러운 전환 효과를 줍니다. (선택 사항)
+        if let window = sceneDelegate.window {
+            UIView.transition(with: window,
+                              duration: 0.3,
+                              options: .transitionCrossDissolve,
+                              animations: nil,
+                              completion: nil)
         }
     }
     func saveUserToFirestore(user: User) {

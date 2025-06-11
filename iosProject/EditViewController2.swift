@@ -1,12 +1,20 @@
 import UIKit
+import NMapsMap
 
 class EditViewController2: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
+    var locationInfo: LocationInfo?
+    var coordinates: NMGLatLng?
+    
     var loopedOptions: [[DiaryThemeOption]] = []
     var autoScrollTimers: [Int: Timer] = [:]
+    
+    
     @IBAction func GotoMemo(_ sender: Any) {
         let selectedTags = getSelectedOptions()
         let vc = EditViewController3()
         vc.selectedTags = selectedTags
+        vc.locationInfo = self.locationInfo
+           vc.coordinates = self.coordinates
         self.present(vc, animated: true)
     }
     let themeSections: [DiaryThemeSection] = [

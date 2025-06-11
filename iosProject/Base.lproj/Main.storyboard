@@ -59,9 +59,9 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x0w-yf-T1s" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="430" y="746"/>
+            <point key="canvasLocation" x="1356.4885496183206" y="745.77464788732402"/>
         </scene>
-        <!--home-->
+        <!--Home View Controller-->
         <scene sceneID="Paa-ha-eJC">
             <objects>
                 <viewController id="ZxL-qS-XA8" customClass="HomeViewController" customModule="iosProject" customModuleProvider="target" sceneMemberID="viewController">
@@ -71,11 +71,26 @@
                         <viewLayoutGuide key="safeArea" id="lbJ-2m-iHY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="home" image="house" catalog="system" id="aJO-iW-nNO"/>
+                    <navigationItem key="navigationItem" id="DqE-vf-WLg"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ayw-3e-9Fx" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="430" y="104"/>
+            <point key="canvasLocation" x="170.22900763358777" y="788.73239436619724"/>
+        </scene>
+        <!--Diary Detail View Controller-->
+        <scene sceneID="foE-uS-SZU">
+            <objects>
+                <viewController storyboardIdentifier="DiaryDetailViewController" id="UDp-VS-kKC" customClass="DiaryDetailViewController" customModule="iosProject" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Zj4-SG-Hke">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="cyf-6O-qcd"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="QCe-Mu-WtQ" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-756" y="1460"/>
         </scene>
         <!--plus-->
         <scene sceneID="8cY-H4-DvJ">
@@ -85,19 +100,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="z7g-tD-98g">
-                                <rect key="frame" x="0.0" y="118" width="393" height="377"/>
-                                <color key="backgroundColor" systemColor="systemBrownColor"/>
-                            </view>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="b1u-wW-6ca">
-                                <rect key="frame" x="26" y="489" width="101" height="64"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="64" id="bzj-WC-NcA"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="top" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="mzl-Ex-duq">
                                 <rect key="frame" x="114" y="540" width="250" height="90"/>
                                 <subviews>
@@ -143,22 +145,23 @@
                                 </buttonConfiguration>
                                 <connections>
                                     <action selector="GotoMemo:" destination="RAA-iE-suu" eventType="touchUpInside" id="kee-nO-ggF"/>
-                                    <segue destination="4lT-yq-ccY" kind="show" id="YqR-cI-u7J"/>
+                                    <segue destination="4lT-yq-ccY" kind="show" identifier="goToEdit2" id="YqR-cI-u7J"/>
                                 </connections>
                             </button>
+                            <view multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="z7g-tD-98g">
+                                <rect key="frame" x="0.0" y="118" width="393" height="377"/>
+                                <color key="backgroundColor" systemColor="systemBrownColor"/>
+                            </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="RvB-Yc-yS2"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="b1u-wW-6ca" firstAttribute="leading" secondItem="RvB-Yc-yS2" secondAttribute="leading" constant="26" id="JC7-EG-JmB"/>
                             <constraint firstItem="RvB-Yc-yS2" firstAttribute="trailing" secondItem="mzl-Ex-duq" secondAttribute="trailing" constant="29" id="TJ4-B4-Th2"/>
                             <constraint firstItem="1GE-bd-nF1" firstAttribute="top" secondItem="z7g-tD-98g" secondAttribute="bottom" constant="45.333333333333371" id="YeU-gZ-vGR"/>
-                            <constraint firstItem="b1u-wW-6ca" firstAttribute="top" secondItem="RvB-Yc-yS2" secondAttribute="top" constant="371" id="ZF4-WB-EGz"/>
                             <constraint firstItem="mzl-Ex-duq" firstAttribute="leading" secondItem="1GE-bd-nF1" secondAttribute="trailing" constant="10" id="ZT5-Hh-wih"/>
                             <constraint firstItem="z7g-tD-98g" firstAttribute="leading" secondItem="OtP-JO-6Kw" secondAttribute="leading" id="ahv-Pn-p1m"/>
                             <constraint firstItem="z7g-tD-98g" firstAttribute="centerX" secondItem="ctx-BT-fhU" secondAttribute="centerX" id="ewM-u0-5gU"/>
                             <constraint firstItem="ctx-BT-fhU" firstAttribute="top" secondItem="mzl-Ex-duq" secondAttribute="bottom" constant="45" id="hcd-n8-GNK"/>
-                            <constraint firstItem="RvB-Yc-yS2" firstAttribute="trailing" secondItem="b1u-wW-6ca" secondAttribute="trailing" constant="266" id="kyv-fv-0id"/>
                             <constraint firstItem="z7g-tD-98g" firstAttribute="top" secondItem="RvB-Yc-yS2" secondAttribute="top" id="lJH-Zb-N20"/>
                             <constraint firstItem="mzl-Ex-duq" firstAttribute="top" secondItem="OtP-JO-6Kw" secondAttribute="top" constant="540" id="rAr-em-rIk"/>
                             <constraint firstItem="mzl-Ex-duq" firstAttribute="top" secondItem="z7g-tD-98g" secondAttribute="bottom" constant="45" id="tbw-Tu-jsA"/>
@@ -170,12 +173,12 @@
                         <outlet property="iconView" destination="1GE-bd-nF1" id="fbK-SM-rRw"/>
                         <outlet property="locationSubtitleLabel" destination="in2-kT-kuv" id="Yls-nL-QyL"/>
                         <outlet property="locationTitleLabel" destination="lAT-v4-qGc" id="oeN-fV-lGT"/>
-                        <outlet property="mapContainerView" destination="z7g-tD-98g" id="KUw-0H-SKj"/>
+                        <outlet property="mapContainerView" destination="z7g-tD-98g" id="NOY-cb-y5q"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="HHK-5E-YCj" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1472.5190839694656" y="328.16901408450707"/>
+            <point key="canvasLocation" x="2399.2366412213742" y="328.16901408450707"/>
         </scene>
         <!--Edit View Controller2-->
         <scene sceneID="L4m-Pm-BBN">
@@ -202,7 +205,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="0gT-n6-PZa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2212.9770992366412" y="327.46478873239437"/>
+            <point key="canvasLocation" x="3139.6946564885493" y="327.46478873239437"/>
         </scene>
         <!--Edit View Controller3-->
         <scene sceneID="FTC-su-fP5">
@@ -217,7 +220,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ghl-f5-pJ2" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2883" y="327"/>
+            <point key="canvasLocation" x="3808.3969465648852" y="326.76056338028172"/>
         </scene>
         <!--Login View Controller-->
         <scene sceneID="juz-wJ-Pcb">
@@ -259,7 +262,7 @@
                     </tabBar>
                     <connections>
                         <segue destination="BYZ-38-t0r" kind="relationship" relationship="viewControllers" id="BcL-2e-5Hm"/>
-                        <segue destination="ZxL-qS-XA8" kind="relationship" relationship="viewControllers" id="rjg-fA-Zte"/>
+                        <segue destination="8K3-VF-mq8" kind="relationship" relationship="viewControllers" id="rjg-fA-Zte"/>
                         <segue destination="RAA-iE-suu" kind="relationship" relationship="viewControllers" id="3lc-Am-ePD"/>
                         <segue destination="8TS-a0-W9q" kind="relationship" relationship="viewControllers" id="ugq-aj-lFj"/>
                     </connections>
@@ -281,7 +284,26 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="zE9-dt-SkY" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1200" y="-340"/>
+            <point key="canvasLocation" x="1172" y="-545"/>
+        </scene>
+        <!--home-->
+        <scene sceneID="mgT-zj-0hI">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="8K3-VF-mq8" sceneMemberID="viewController">
+                    <tabBarItem key="tabBarItem" title="home" image="house" catalog="system" id="aJO-iW-nNO"/>
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="d8b-Zx-mx2">
+                        <rect key="frame" x="0.0" y="118" width="393" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="ZxL-qS-XA8" kind="relationship" relationship="rootViewController" id="qJZ-1e-ucL"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Iwf-iG-guT" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-756.48854961832058" y="788.73239436619724"/>
         </scene>
     </scenes>
     <resources>
