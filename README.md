@@ -61,6 +61,7 @@ gpt api를 이용한 사용자의 위치를 기반으로 작성된 메모나 일
 | **개발 환경**   | <img src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white"/> <img src="https://img.shields.io/badge/Xcode-147EFB?style=for-the-badge&logo=xcode&logoColor=white"/> |
 | **프레임워크** | <img src="https://img.shields.io/badge/SwiftUI-FA7343?style=for-the-badge&logo=swift&logoColor=white"/> <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black"/> |
 | **Open API**   | <img src="https://img.shields.io/badge/GPT%20API-412991?style=for-the-badge&logo=openai&logoColor=white"/> <img src="https://img.shields.io/badge/Naver%20Map-03C75A?style=for-the-badge&logo=naver&logoColor=white"/> |
+| **클라우드 백엔드** | <img src="https://img.shields.io/badge/Cloud%20Functions-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white"/> |
 | **버전 관리**   | <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white"/> <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white"/> |
 
 
