@@ -36,22 +36,9 @@
 		F8571A9F2DEB1CCE001A9B1D /* iosProjectUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosProjectUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F8571AA72DEB1CCE001A9B1D /* Exceptions for "iosProject" folder in "iosProject" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = F8571A7E2DEB1CCB001A9B1D /* iosProject */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F8571A812DEB1CCB001A9B1D /* iosProject */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				F8571AA72DEB1CCE001A9B1D /* Exceptions for "iosProject" folder in "iosProject" target */,
-			);
 			path = iosProject;
 			sourceTree = "<group>";
 		};
