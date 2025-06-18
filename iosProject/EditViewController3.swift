@@ -441,10 +441,10 @@ class EditViewController3: UIViewController, UITextViewDelegate {
     }
 
     private func generateDefaultDiary(from tags: [String], locationInfo: LocationInfo) -> String {
-        let title = "제목: gpt api key를 secrets.plist 에서 교체 해주세요"
+        let title = "제목: gpt api key -> secrets.plist 확인"
         
         var content = ""
-        content += "이 화면은 github에 gpt api key를 함께 못 올리기 때문에 출력 양식을 하드 코딩한 방식입니다 \n\n secrets.plist을 따로 만들어 놨기 때문에 이 부분에 gpt api key를 입력하면 됩니다."
+        content += "이 화면은 github에 gpt api key를 함께 못 올리기 때문에 출력 양식을 하드 코딩한 방식입니다 \n\n secrets.plist을 따로 만들어 놨기 때문에 이 부분에 gpt api key를 입력하면 됩니다.\n\n"
 
         if !tags.isEmpty {
             content += "오늘은 \(tags.joined(separator: ", ")) 같은 일들이 있었어요. "
