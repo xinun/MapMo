@@ -8,15 +8,17 @@
 	<string>2bd5gp4k59</string>
 	<key>NAVER_CLIENT_SECRET</key>
 	<string>yJaqLU8GJMf3Y3TqsFxWw5FpTqK69Nc6BlC4IeuT</string>
-<key>CFBundleURLTypes</key>
-<array>
-    <dict>
-        <key>CFBundleURLSchemes</key>
-        <array>
-            <string>com.googleusercontent.apps.740078932134-kr5avl2ab28e19kforegm0leid1ui0ri</string>
-        </array>
-    </dict>
-</array>
+		<key>CFBundleDisplayName</key>
+	<string>Mapmo</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.740078932134-kr5avl2ab28e19kforegm0leid1ui0ri</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>현재 위치를 확인하기 위해 위치 권한이 필요합니다.</string>
 	<key>UIApplicationSceneManifest</key>
