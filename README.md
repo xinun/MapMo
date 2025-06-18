@@ -69,8 +69,9 @@ gpt api를 이용한 사용자의 위치를 기반으로 작성된 메모나 일
 
 ## 📹 시연 영상
 
-[![MapMo 시연 영상](https://img.shields.io/badge/YouTube-Video-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=영상링크를_여기에_넣으세요)
+[![MapMo 시연 영상](https://img.shields.io/badge/YouTube-Video-red?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/shorts/Yp7JHgvrf_4?feature=share)
 
+[![썸네일](https://img.youtube.com/vi/Yp7JHgvrf_4/0.jpg)](https://youtube.com/shorts/Yp7JHgvrf_4?feature=share)
 
 > 앱의 핵심 기능과 전체 흐름을 영상으로 확인할 수 있습니다.
 
