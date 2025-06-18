@@ -35,7 +35,6 @@ class EditViewController: UIViewController, CLLocationManagerDelegate, UIGesture
             present(alert, animated: true)
             return
         }
-        performSegue(withIdentifier: "goToEdit2", sender: self)
     }
     
     // MARK: - Lifecycle
@@ -64,9 +63,7 @@ class EditViewController: UIViewController, CLLocationManagerDelegate, UIGesture
         }
     }
 
-    // EditViewController.swift 파일
 
-    // EditViewController.swift 파일
 
     private func setupMap() {
         mapView = NMFMapView(frame: mapContainerView.bounds)

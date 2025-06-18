@@ -65,6 +65,11 @@
 			path = iosProjectUITests;
 			sourceTree = "<group>";
 		};
+		F8AC8CAA2E02B05A00AA55EA /* images */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = images;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +118,7 @@
 		F8571A762DEB1CCB001A9B1D = {
 			isa = PBXGroup;
 			children = (
+				F8AC8CAA2E02B05A00AA55EA /* images */,
 				F8571A812DEB1CCB001A9B1D /* iosProject */,
 				F8571A982DEB1CCE001A9B1D /* iosProjectTests */,
 				F8571AA22DEB1CCE001A9B1D /* iosProjectUITests */,
@@ -151,6 +157,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				F8571A812DEB1CCB001A9B1D /* iosProject */,
+				F8AC8CAA2E02B05A00AA55EA /* images */,
 			);
 			name = iosProject;
 			productName = iosProject;

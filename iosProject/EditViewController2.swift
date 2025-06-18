@@ -8,22 +8,34 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
     var loopedOptions: [[DiaryThemeOption]] = []
     var autoScrollTimers: [Int: Timer] = [:]
     
+    @IBOutlet weak var gotoMemoButton: UIButton!
     
     @IBAction func GotoMemo(_ sender: Any) {
         let selectedTags = getSelectedOptions()
         var selectedEmotion: String?
-              if let selectedItemIndexForEmotion = selectedIndices[0] { // 첫 번째 섹션의 인덱스 0
-                  let originalCount = themeSections[0].options.count // 첫 번째 섹션의 원래 옵션 개수
-                  let actualIndex = selectedItemIndexForEmotion % originalCount // 실제 인덱스
-                  selectedEmotion = themeSections[0].options[actualIndex].title // 선택된 감정의 title
-              }
-        let vc = EditViewController3()
+        if let selectedItemIndexForEmotion = selectedIndices[0] {
+            let originalCount = themeSections[0].options.count
+            let actualIndex = selectedItemIndexForEmotion % originalCount
+            selectedEmotion = themeSections[0].options[actualIndex].title
+        }
+
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        guard let vc = storyboard.instantiateViewController(withIdentifier: "EditViewController3") as? EditViewController3 else {
+            print("❌ EditViewController3를 찾을 수 없습니다.")
+            return
+        }
+
         vc.selectedTags = selectedTags
         vc.locationInfo = self.locationInfo
-           vc.coordinates = self.coordinates
+        vc.coordinates = self.coordinates
         vc.selectedEmotion = selectedEmotion
+
+        // ✅ 전체화면 스타일 지정
+        vc.modalPresentationStyle = .fullScreen
+
         self.present(vc, animated: true)
     }
+
     
     
     let themeSections: [DiaryThemeSection] = [
@@ -124,31 +136,31 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
     override func viewDidLoad() {
         super.viewDidLoad()
         loopedOptions = themeSections.map { section in
-              Array(repeating: section.options, count: 3).flatMap { $0 }
-          }
+            Array(repeating: section.options, count: 3).flatMap { $0 }
+        }
         
         view.backgroundColor = .white
-
+        
         var previousBottom: NSLayoutYAxisAnchor = view.safeAreaLayoutGuide.topAnchor
-
+        
         for (index, section) in themeSections.enumerated() {
             let questionLabel = UILabel()
             questionLabel.text = section.question
             questionLabel.font = .boldSystemFont(ofSize: 18)
             questionLabel.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(questionLabel)
-
+            
             NSLayoutConstraint.activate([
                 questionLabel.topAnchor.constraint(equalTo: previousBottom, constant: 24),
                 questionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16)
             ])
-
+            
             let layout = UICollectionViewFlowLayout()
             layout.scrollDirection = .horizontal
             layout.itemSize = CGSize(width: 120, height: 40)
             layout.estimatedItemSize = .zero // 🔧 명시적으로 제거
             layout.minimumLineSpacing = 8
-
+            
             let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
             collectionView.translatesAutoresizingMaskIntoConstraints = false
             collectionView.backgroundColor = .clear
@@ -157,20 +169,45 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
             collectionView.delegate = self
             collectionView.decelerationRate = .fast
             collectionView.showsHorizontalScrollIndicator = false
-
+            
             collectionView.register(TagCell.self, forCellWithReuseIdentifier: "TagCell")
-
+            
             view.addSubview(collectionView)
-
+            
             NSLayoutConstraint.activate([
                 collectionView.topAnchor.constraint(equalTo: questionLabel.bottomAnchor, constant: 8),
                 collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                 collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
                 collectionView.heightAnchor.constraint(equalToConstant: 50)
             ])
-
+            
             previousBottom = collectionView.bottomAnchor
+            // 마지막 섹션이면 여백 뷰 추가 (버튼과 겹치지 않게)
+            if index == themeSections.count - 1 {
+                let spacer = UIView()
+                spacer.translatesAutoresizingMaskIntoConstraints = false
+                spacer.isUserInteractionEnabled = false // 터치 이벤트 무시
+
+                view.addSubview(spacer)
+                
+                NSLayoutConstraint.activate([
+                    spacer.topAnchor.constraint(equalTo: collectionView.bottomAnchor),
+                    spacer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                    spacer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                    spacer.heightAnchor.constraint(equalToConstant: 100)  // 👈 여백은 필요에 따라 조절 가능
+
+                ])
+                view.bringSubviewToFront(gotoMemoButton) 
+
+                spacer.isUserInteractionEnabled = false
+
+                previousBottom = spacer.bottomAnchor
+
+            }
+            
+            
         }
+
     }
 
     // MARK: - UICollectionViewDataSource
@@ -189,6 +226,7 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
         return cell
     }
 
+    // EditViewController2.swift 내 scrollViewDidScroll 함수
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard let collectionView = scrollView as? UICollectionView else { return }
 
@@ -197,20 +235,22 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
 
         let currentOffset = scrollView.contentOffset.x
         let contentWidth = scrollView.contentSize.width
+        
+        // TagCell의 너비 (layout.itemSize.width)와 minimumLineSpacing을 더한 값
+        // layout 변수가 이 스코프에서는 직접 접근 불가능하므로, 하드코딩된 값 120 + 8을 사용하거나
+        // 각 컬렉션뷰의 layout을 저장해두는 방법이 필요합니다.
+        // 일단은 현재 코드에 있는 120 + 8을 사용하겠습니다.
         let itemWidth: CGFloat = 120 + 8
 
         if currentOffset < itemWidth {
             let newOffset = currentOffset + itemWidth * CGFloat(original)
-            DispatchQueue.main.async {
-                collectionView.setContentOffset(CGPoint(x: newOffset, y: 0), animated: false)
-            }
+            // ✅ DispatchQueue.main.async 제거. scrollViewDidScroll은 이미 메인 스레드에서 호출됩니다.
+            collectionView.setContentOffset(CGPoint(x: newOffset, y: 0), animated: false)
         } else if currentOffset > contentWidth - itemWidth * CGFloat(original + 1) {
             let newOffset = currentOffset - itemWidth * CGFloat(original)
-            DispatchQueue.main.async {
-                collectionView.setContentOffset(CGPoint(x: newOffset, y: 0), animated: false)
-            }
+            // ✅ DispatchQueue.main.async 제거
+            collectionView.setContentOffset(CGPoint(x: newOffset, y: 0), animated: false)
         }
-
     }
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {

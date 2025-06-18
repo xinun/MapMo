@@ -118,6 +118,11 @@ class EditViewController3: UIViewController, UITextViewDelegate {
                         self.titleField.text = "❌ 일기 생성 실패"
                         self.contentTextView.text = "API 호출에 실패했습니다.\nXcode 콘솔의 에러 메시지를 확인해주세요."
                         self.contentTextView.textColor = .systemRed
+                        let fallbackText = self.generateDefaultDiary(from: self.selectedTags, locationInfo: locationInfo)
+                                  let (title, content) = self.splitTitleAndContent(from: fallbackText)
+                                  self.titleField.text = title
+                                  self.contentTextView.text = content
+                                  self.contentTextView.textColor = .label
                     }
                 }
             }
@@ -429,29 +434,27 @@ class EditViewController3: UIViewController, UITextViewDelegate {
                 completion(false)
             } else {
                 print("✅ 일기 저장 완료")
-                // ✅ 감정 통계 업데이트 호출
-                // 이 updateEmotionStats 함수는 클라이언트에서 호출해도 되고,
-                // Firebase Cloud Functions (index.js)에서 onWrite 트리거로 자동 처리하게 할 수도 있습니다.
-                // Cloud Functions로 이미 구현했다면 이 클라이언트 측 호출은 필요 없습니다.
-                // self.updateEmotionStats(userId: userId, emotion: emotion)
+        
                 completion(true)
             }
         }
     }
 
-    // 이 updateEmotionStats 함수는 Cloud Functions에서 이미 구현했으므로,
-    // EditViewController3에서는 제거해도 됩니다.
-    // func updateEmotionStats(userId: String, emotion: String) {
-    //     let ref = Firestore.firestore()
-    //             .collection("users")
-    //             .document(userId)
-    //             .collection("emotionStats")
-    //             .document("summary")
-    //
-    //     ref.setData([
-    //         "counts.\(emotion)": FieldValue.increment(Int64(1))
-    //     ], merge: true)
-    // }
+    private func generateDefaultDiary(from tags: [String], locationInfo: LocationInfo) -> String {
+        let title = "제목: gpt api key를 info.plist 에서 교체 해주세요"
+        
+        var content = ""
+        
+        if !tags.isEmpty {
+            content += "오늘은 \(tags.joined(separator: ", ")) 같은 일들이 있었어요. "
+        }
+        
+        content += "이 화면은 github에 gpt api key를 함께 못 올리기 때문에 출력 양식을 하드 코딩한 방식입니다 "
+        content += "\(locationInfo.title) 근처에서 시간을 보내며 많은 생각을 하게 되었어요. "
+        content += "짧지만 의미 있는 하루였던 것 같아요. "
+
+        return "\(title)\n\n\(content)"
+    }
 
     private func generateDiary(from tags: [String], locationInfo: LocationInfo, completion: @escaping (String?) -> Void) {
         let prompt = """

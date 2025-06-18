@@ -63,11 +63,44 @@ class HomeViewController: UIViewController {
         navigationItem.title = "메모"
         navigationController?.navigationBar.prefersLargeTitles = true
     }
-    
+    private let floatingButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.translatesAutoresizingMaskIntoConstraints = false
+
+        // 버튼 스타일
+        button.setImage(
+            UIImage(systemName: "plus")?
+                .withConfiguration(UIImage.SymbolConfiguration(pointSize: 28, weight: .bold)),
+            for: .normal
+        )
+        button.tintColor = .white
+        button.backgroundColor = .clear
+        button.layer.cornerRadius = 28
+        button.clipsToBounds = true
+
+        // 그림자
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 4)
+        button.layer.shadowRadius = 8.0
+        button.layer.shadowOpacity = 0.3
+
+        return button
+    }()
+
+
     private func setupUI() {
         view.addSubview(collectionView)
         view.addSubview(emptyStateLabel)
-        
+        view.addSubview(floatingButton)
+        floatingButton.addTarget(self, action: #selector(didTapFloatingButton), for: .touchUpInside)
+
+        NSLayoutConstraint.activate([
+            floatingButton.widthAnchor.constraint(equalToConstant: 56),
+            floatingButton.heightAnchor.constraint(equalToConstant: 56),
+            floatingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            floatingButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24)
+        ])
+
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(MemoCell.self, forCellWithReuseIdentifier: MemoCell.identifier)
@@ -81,9 +114,34 @@ class HomeViewController: UIViewController {
             emptyStateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emptyStateLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
+        
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+
+        // 이미 그라데이션이 추가되어 있다면 중복 방지
+        if floatingButton.layer.sublayers?.contains(where: { $0 is CAGradientLayer }) == false {
+            let gradientLayer = CAGradientLayer()
+            gradientLayer.colors = [
+                UIColor.systemIndigo.withAlphaComponent(0.8).cgColor,
+                UIColor.systemIndigo.withAlphaComponent(0.4).cgColor
+            ]
+            gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+            gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+            gradientLayer.frame = floatingButton.bounds
+            gradientLayer.cornerRadius = 28
+
+            floatingButton.layer.insertSublayer(gradientLayer, at: 0)
+        }
     }
 
-    // MARK: - Firestore
+    @objc private func didTapFloatingButton() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        if let editVC = storyboard.instantiateViewController(withIdentifier: "EditViewController") as? EditViewController {
+            navigationController?.pushViewController(editVC, animated: true)
+        }
+    }
+
     private func fetchDiaries() {
         guard let userId = Auth.auth().currentUser?.uid else {
             print("⚠️ 로그인된 유저가 없습니다.")
