@@ -37,7 +37,7 @@ gpt api를 이용한 사용자의 위치를 기반으로 작성된 메모나 일
   <tr>
     <td align="center"><b>1. 로그인</b><br><img src="images/loginview.PNG" width="160" height="320"/><br>구글 소셜 로그인</td>
     <td align="center"><b>2. 홈</b><br><img src="images/homeview.PNG" width="160" height="320"/><br>작성한 메모들 리스트</td>
-    <td align="center"><b>3. 지도</b><br><img src="images/mapview.PNG" width="160" height="320"/><br>현재 위치 및 특정 위치에 메모 추가 가능</td>
+    <td align="center"><b>3. 지도</b><br><img src="images/mapview.PNG" width="160" height="320"/><br>현재 위치 및 특정 위치에 메모 추가</td>
     <td align="center"><b>4. 지도 상세</b><br><img src="images/mapdetail.PNG" width="160" height="320"/><br>해당 위치의 일기 조회</td>
     <td align="center"><b>5. 감정별 추천</b><br><img src="images/startview.PNG" width="160" height="320"/><br>감정 기반 기록 시작</td>
   </tr>
