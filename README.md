@@ -37,15 +37,19 @@ gpt api를 이용한 사용자의 위치를 기반으로 작성된 메모나 일
   <tr>
     <td align="center"><b>1. 로그인</b><br><img src="images/loginview.PNG" width="160" height="320"/><br>구글 소셜 로그인</td>
     <td align="center"><b>2. 홈</b><br><img src="images/homeview.PNG" width="160" height="320"/><br>작성한 메모들 리스트</td>
-    <td align="center"><b>3. 지도</b><br><img src="images/mapview.PNG" width="160" height="320"/><br>현재 위치 및 특정 위치에 메모 추가</td>
+        <td align="center"><b>3. 지도</b><br><img src="images/mapview.PNG" width="160" height="320"/><br>현재 위치 및 특정 위치에 메모 추가</td>
+      </tr>
+<tr>
     <td align="center"><b>4. 지도 상세</b><br><img src="images/mapdetail.PNG" width="160" height="320"/><br>해당 위치의 일기 조회</td>
-    <td align="center"><b>5. 감정별 추천</b><br><img src="images/startview.PNG" width="160" height="320"/><br>감정 기반 기록 시작</td>
+      <td align="center"><b>5. 감정별 추천</b><br><img src="images/startview.PNG" width="160" height="320"/><br>감정 기반 기록 시작</td>
+    <td align="center"><b>6. 위치 선택</b><br><img src="images/mapselect.PNG" width="160" height="320"/><br>네이버 지도 api로 위치 선택</td>
   </tr>
   <tr>
-    <td align="center"><b>6. 위치 선택</b><br><img src="images/mapselect.PNG" width="160" height="320"/><br>네이버 지도 api로 위치 선택</td>
     <td align="center"><b>7. 감정 선택</b><br><img src="images/cellview.gif" width="160" height="320"/><br>원하는 감정과 한 일들 선택</td>
-    <td align="center"><b>8. AI 생성</b><br><img src="images/generateview.PNG" width="160" height="320"/><br>gpt api로 일기 생성</td>
-    <td align="center"><b>9. 일기 완성</b><br><img src="images/diarycomplete.PNG" width="160" height="320"/><br>최종 완성된 일기 저장</td>
+        <td align="center"><b>8. AI 생성</b><br><img src="images/generateview.PNG" width="160" height="320"/><br>gpt api로 일기 생성</td>
+        <td align="center"><b>9. 일기 완성</b><br><img src="images/diarycomplete.PNG" width="160" height="320"/><br>최종 완성된 일기 저장</td>
+    </tr>
+  <tr>
     <td align="center"><b>10. 일기 수정</b><br><img src="images/diarydetail.PNG" width="160" height="320"/><br>작성 된 일기 수정 화면</td>
   </tr>
 </table>
