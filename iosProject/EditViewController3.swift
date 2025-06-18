@@ -441,15 +441,15 @@ class EditViewController3: UIViewController, UITextViewDelegate {
     }
 
     private func generateDefaultDiary(from tags: [String], locationInfo: LocationInfo) -> String {
-        let title = "제목: gpt api key를 info.plist 에서 교체 해주세요"
+        let title = "제목: gpt api key를 secrets.plist 에서 교체 해주세요"
         
         var content = ""
-        
+        content += "이 화면은 github에 gpt api key를 함께 못 올리기 때문에 출력 양식을 하드 코딩한 방식입니다 \n\n secrets.plist을 따로 만들어 놨기 때문에 이 부분에 gpt api key를 입력하면 됩니다."
+
         if !tags.isEmpty {
             content += "오늘은 \(tags.joined(separator: ", ")) 같은 일들이 있었어요. "
         }
         
-        content += "이 화면은 github에 gpt api key를 함께 못 올리기 때문에 출력 양식을 하드 코딩한 방식입니다 "
         content += "\(locationInfo.title) 근처에서 시간을 보내며 많은 생각을 하게 되었어요. "
         content += "짧지만 의미 있는 하루였던 것 같아요. "
 
@@ -476,11 +476,20 @@ class EditViewController3: UIViewController, UITextViewDelegate {
         let request = GPTRequest(model: "gpt-4o", messages: messages)
 
         guard let url = URL(string: "https://api.openai.com/v1/chat/completions"),
-              let apiKey = Bundle.main.infoDictionary?["GPT_API_KEY"] as? String else {
-            print("❌ API URL 또는 키 없음. Info.plist를 확인하세요.")
+              let apiKey = loadGPTApiKey() else {
+            print("❌ GPT API 키 로드 실패")
             completion(nil)
             return
         }
+        func loadGPTApiKey() -> String? {
+            guard let path = Bundle.main.path(forResource: "secrets", ofType: "plist"),
+                  let dict = NSDictionary(contentsOfFile: path),
+                  let key = dict["GPT_API_KEY"] as? String else {
+                return nil
+            }
+            return key
+        }
+
 
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"

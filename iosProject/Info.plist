@@ -2,13 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>GPT_API_KEY</key>
-	<string>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</string>
 	<key>NAVER_CLIENT_ID</key>
 	<string>2bd5gp4k59</string>
 	<key>NAVER_CLIENT_SECRET</key>
 	<string>yJaqLU8GJMf3Y3TqsFxWw5FpTqK69Nc6BlC4IeuT</string>
-		<key>CFBundleDisplayName</key>
+	<key>CFBundleDisplayName</key>
 	<string>Mapmo</string>
 	<key>CFBundleURLTypes</key>
 	<array>

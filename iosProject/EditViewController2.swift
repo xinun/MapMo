@@ -149,9 +149,9 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
             questionLabel.font = .boldSystemFont(ofSize: 18)
             questionLabel.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(questionLabel)
-            
+            let topSpacing: CGFloat = (index == 0) ? 0 : 8
             NSLayoutConstraint.activate([
-                questionLabel.topAnchor.constraint(equalTo: previousBottom, constant: 24),
+                questionLabel.topAnchor.constraint(equalTo: previousBottom, constant: topSpacing),
                 questionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16)
             ])
             
