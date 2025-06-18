@@ -23,20 +23,26 @@ class TagCell: UICollectionViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = UIFont.systemFont(ofSize: 14)
 
+        // hugging/압축 저항 설정 추가
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+
         contentView.addSubview(iconView)
         contentView.addSubview(label)
 
         NSLayoutConstraint.activate([
-            iconView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
+            iconView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 4), // 기존 8 → 4
             iconView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             iconView.widthAnchor.constraint(equalToConstant: 20),
             iconView.heightAnchor.constraint(equalToConstant: 20),
 
-            label.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 8),
-            label.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+            label.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 4), // 기존 8 → 4
+            label.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -4), // 기존 8 → 4
             label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
     }
+
+
 
     func configure(with option: DiaryThemeOption, selected: Bool) {
         label.text = option.title

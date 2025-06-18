@@ -21,11 +21,11 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
         super.viewDidLoad()
         
         locationManager.delegate = self
-        checkLocationAuthorization() // ✅ 새로운 권한 확인 함수를 호출
+        checkLocationAuthorization()
         
         fetchAndDisplayDiaries()
+        
     }
-    // ✅ 이 함수 전체를 클래스 안에 추가해주세요.
     func checkLocationAuthorization() {
         let status: CLAuthorizationStatus
         
@@ -82,14 +82,17 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
     
     /// Diary 객체를 기반으로 지도에 마커를 생성하고 탭 이벤트를 설정합니다.
     func createMarker(for diary: Diary) {
-        // ✅ 옵셔널인 geoPoint를 안전하게 해제합니다.
-        guard let geoPoint = diary.geoPoint else { return }
-        
+        // guard let geoPoint = diary.geoPoint else { return } // 이 줄은 필요 없어집니다.
+
         let marker = NMFMarker()
-        marker.position = NMGLatLng(lat: geoPoint.latitude, lng: geoPoint.longitude)
-        marker.captionText = diary.locationTitle ?? diary.title
+        marker.position = diary.mapLatLng
+        marker.captionText = diary.markerCaption
         marker.mapView = self.mapView
-        
+        if let image = UIImage(named: "black_marker_icon") {
+            marker.iconImage = NMFOverlayImage(image: image)
+            marker.width = 45   // 원하는 크기 (기본은 이미지 크기 그대로)
+             marker.height = 45
+        }
         marker.touchHandler = { [weak self] (overlay) -> Bool in
             self?.showDiaryAlert(title: diary.title, message: diary.content)
             return true
@@ -132,7 +135,11 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
         let currentLocationMarker = NMFMarker()
         currentLocationMarker.position = currentLatLng
         currentLocationMarker.captionText = "현재 위치"
-        currentLocationMarker.iconImage = NMF_MARKER_IMAGE_BLUE
+        if let image = UIImage(named: "mint_marker_icon") {
+            currentLocationMarker.iconImage = NMFOverlayImage(image: image)
+            currentLocationMarker.width = 45   // 👈 크기 조정
+            currentLocationMarker.height = 45
+        }
         currentLocationMarker.mapView = self.mapView
     }
     

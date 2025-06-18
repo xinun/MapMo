@@ -1,31 +1,42 @@
-//
-//  Diary.swift
-//  iosProject
-//
-//  Created by xinun on 6/11/25.
-//
-
-// Diary.swift
-
-import Foundation
 import FirebaseFirestore
+import UIKit
+import NMapsMap
 
-struct Diary: Decodable, Identifiable {
+struct Diary: Codable, Identifiable {
     @DocumentID var id: String?
+
+    let userId: String
     let title: String
     let content: String
-    let tags: [String]
+    let latitude: Double
+    let longitude: Double
+    let locationName: String?
+    let address: String?
+    let tags: [String]?
+    let emotion: String?
     let createdAt: Timestamp
-    
-    // 위치 정보 필드 (오래된 데이터에는 없을 수 있으므로 옵셔널 '?' 처리)
-    let locationTitle: String?
-    let locationSubtitle: String?
-    let geoPoint: GeoPoint?
-    
-    // 화면 표시용 날짜 포맷팅
+    let updatedAt: Timestamp?
+
+    var monthDay: String {
+        return DateFormatter.monthDayFormatter.string(from: createdAt.dateValue())
+    }
+
+    // 🔽 여기에 추가하세요
     var formattedDate: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy. MM. dd"
+        formatter.dateFormat = "yyyy.MM.dd"
         return formatter.string(from: createdAt.dateValue())
+    }
+
+    var locationTitle: String {
+        return locationName ?? title
+    }
+
+    var mapLatLng: NMGLatLng {
+        return NMGLatLng(lat: latitude, lng: longitude)
+    }
+
+    var markerCaption: String {
+        return locationName ?? title
     }
 }

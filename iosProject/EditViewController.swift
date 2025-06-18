@@ -56,6 +56,7 @@ class EditViewController: UIViewController, CLLocationManagerDelegate, UIGesture
         if segue.identifier == "goToEdit2" {
             if let destinationVC = segue.destination as? EditViewController2 {
                 // TODO: EditViewController2에 var locationInfo: LocationInfo? 변수 추가 후 주석 해제
+                
                 destinationVC.locationInfo = self.selectedLocationInfo
                 destinationVC.coordinates = self.selectedCoordinates
 
@@ -208,6 +209,12 @@ class EditViewController: UIViewController, CLLocationManagerDelegate, UIGesture
         currentMarker?.mapView = nil
         let marker = NMFMarker(position: coord)
         marker.captionText = caption
+        if let image = UIImage(named: "mint_marker_icon") {
+                marker.iconImage = NMFOverlayImage(image: image)
+                marker.width = 45
+                marker.height = 45
+            }
+
         marker.mapView = mapView
         currentMarker = marker
     }

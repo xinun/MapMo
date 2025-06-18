@@ -10,9 +10,9 @@ class EditViewController3: UIViewController, UITextViewDelegate {
     
     var selectedTags: [String] = []
     var locationInfo: LocationInfo?
-       var coordinates: NMGLatLng?
-    // MARK: - UI Components
-    
+    var coordinates: NMGLatLng?
+    var selectedEmotion: String? // ✅ 선택된 감정을 저장할 새로운 변수
+
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .medium)
@@ -376,35 +376,82 @@ class EditViewController3: UIViewController, UITextViewDelegate {
         return ("일기", text)
     }
 
-    // MARK: - Firebase & API
-    
+    func updateEmotionStats(userId: String, emotion: String) {
+        let ref = Firestore.firestore()
+            .collection("users")
+            .document(userId)
+            .collection("emotionStats")
+            .document("summary")
+        
+        ref.setData([
+            "counts.\(emotion)": FieldValue.increment(Int64(1))
+        ], merge: true)
+    }
+
+
     private func saveDiaryToFirestore(title: String, content: String, tags: [String], locationInfo: LocationInfo, coordinates: NMGLatLng, completion: @escaping (Bool) -> Void) {
         guard let userId = Auth.auth().currentUser?.uid else {
             completion(false)
             return
         }
-        let geoPoint = GeoPoint(latitude: coordinates.lat, longitude: coordinates.lng)
+
+        // Firestore GeoPoint는 Double 위도/경도로 충분하므로, GeoPoint(latitude: coordinates.lat, longitude: coordinates.lng) 이 부분은 데이터를 Firestore에 저장할 때 사용하세요.
+        // Diary 모델에 직접 GeoPoint 타입을 저장하지 않는다면 필요 없습니다.
+        // 현재 Diary 모델은 Double latitude/longitude를 사용하므로 이 줄은 주석 처리하거나 제거해도 됩니다.
+        // let geoPoint = GeoPoint(latitude: coordinates.lat, longitude: coordinates.lng)
+
+        let createdAt = Timestamp()
+        let dateFormatter = DateFormatter.monthDayFormatter
+        let monthDay = dateFormatter.string(from: createdAt.dateValue()) // Cloud Functions가 자동으로 추가하므로 여기선 필수는 아님
+
+        // 감정은 첫 번째 태그가 아니라, 사용자가 명시적으로 선택한 감정 필드가 있다면 그것을 사용하는 것이 좋습니다.
+        // 현재 코드에서는 tags.first를 emotion으로 사용하고 있으니, 이대로 진행하겠습니다.
+        let emotionToSave = self.selectedEmotion ?? "미분류"
         let data: [String: Any] = [
-                "title": title,
-                "content": content,
-                "tags": tags,
-                "createdAt": Timestamp(),
-                "locationTitle": locationInfo.title,
-                "locationSubtitle": locationInfo.subtitle ?? "",
-                "geoPoint": geoPoint // GeoPoint 저장
-            ]
+            "userId": userId,
+            "title": title,
+            "content": content,
+            "tags": tags,
+            "createdAt": createdAt,
+            "updatedAt": FieldValue.serverTimestamp(),
+            "monthDay": monthDay, // Cloud Functions에서 추가되지만, 앱에서도 넣어줘도 무방
+            "locationName": locationInfo.title,
+            "address": locationInfo.subtitle ?? "",
+            "latitude": coordinates.lat,
+            "longitude": coordinates.lng,
+            "emotion": emotionToSave
+        ]
+
         let db = Firestore.firestore()
-        // 👈 모든 정보가 담긴 'data' 변수를 사용하도록 수정
         db.collection("users").document(userId).collection("diaries").addDocument(data: data) { error in
             if let error = error {
-                print("❌ 저장 실패: \(error.localizedDescription)")
+                print("❌ 일기 저장 실패: \(error.localizedDescription)")
                 completion(false)
             } else {
                 print("✅ 일기 저장 완료")
+                // ✅ 감정 통계 업데이트 호출
+                // 이 updateEmotionStats 함수는 클라이언트에서 호출해도 되고,
+                // Firebase Cloud Functions (index.js)에서 onWrite 트리거로 자동 처리하게 할 수도 있습니다.
+                // Cloud Functions로 이미 구현했다면 이 클라이언트 측 호출은 필요 없습니다.
+                // self.updateEmotionStats(userId: userId, emotion: emotion)
                 completion(true)
             }
         }
     }
+
+    // 이 updateEmotionStats 함수는 Cloud Functions에서 이미 구현했으므로,
+    // EditViewController3에서는 제거해도 됩니다.
+    // func updateEmotionStats(userId: String, emotion: String) {
+    //     let ref = Firestore.firestore()
+    //             .collection("users")
+    //             .document(userId)
+    //             .collection("emotionStats")
+    //             .document("summary")
+    //
+    //     ref.setData([
+    //         "counts.\(emotion)": FieldValue.increment(Int64(1))
+    //     ], merge: true)
+    // }
 
     private func generateDiary(from tags: [String], locationInfo: LocationInfo, completion: @escaping (String?) -> Void) {
         let prompt = """

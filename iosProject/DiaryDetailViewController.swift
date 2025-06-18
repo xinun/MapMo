@@ -94,24 +94,35 @@ class DiaryDetailViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        // 네비게이션 바 오른쪽에 '수정' 버튼 추가
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "수정", style: .done, target: self, action: #selector(saveButtonTapped))
+        // ✅ 네비게이션 바 중앙에 날짜를 표시
+        let dateLabel = UILabel()
+        dateLabel.text = diary?.formattedDate ?? "날짜 없음"
+        dateLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        dateLabel.textColor = .secondaryLabel
+        dateLabel.sizeToFit()
+        navigationItem.titleView = dateLabel
+
+        // ✅ 오른쪽에 '완료' 버튼 유지
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "완료",
+            style: .done,
+            target: self,
+            action: #selector(saveButtonTapped)
+        )
     }
-    
+
+
     // MARK: - Actions
     
     @objc private func saveButtonTapped() {
-        // 1. 수정된 제목과 내용을 가져옵니다.
         let updatedTitle = titleTextField.text ?? "제목 없음"
         let updatedContent = contentTextView.text ?? ""
         
-        // 2. 수정할 diary 문서의 ID를 가져옵니다.
         guard let diaryID = diary?.id else {
             print("⚠️ Diary ID가 없습니다.")
             return
         }
         
-        // 3. Firestore 업데이트 함수를 호출합니다.
         updateDiaryInFirestore(documentID: diaryID, title: updatedTitle, content: updatedContent)
     }
 
@@ -121,7 +132,6 @@ class DiaryDetailViewController: UIViewController {
         
         let documentRef = db.collection("users").document(userId).collection("diaries").document(documentID)
         
-        // updateData를 사용하여 특정 필드만 수정합니다.
         documentRef.updateData([
             "title": title,
             "content": content
@@ -131,7 +141,6 @@ class DiaryDetailViewController: UIViewController {
                 // TODO: 사용자에게 실패 알림 팝업 표시
             } else {
                 print("✅ 데이터 수정 완료")
-                // 수정 완료 후 이전 화면으로 돌아가기
                 self.navigationController?.popViewController(animated: true)
             }
         }

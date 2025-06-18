@@ -11,12 +11,21 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
     
     @IBAction func GotoMemo(_ sender: Any) {
         let selectedTags = getSelectedOptions()
+        var selectedEmotion: String?
+              if let selectedItemIndexForEmotion = selectedIndices[0] { // 첫 번째 섹션의 인덱스 0
+                  let originalCount = themeSections[0].options.count // 첫 번째 섹션의 원래 옵션 개수
+                  let actualIndex = selectedItemIndexForEmotion % originalCount // 실제 인덱스
+                  selectedEmotion = themeSections[0].options[actualIndex].title // 선택된 감정의 title
+              }
         let vc = EditViewController3()
         vc.selectedTags = selectedTags
         vc.locationInfo = self.locationInfo
            vc.coordinates = self.coordinates
+        vc.selectedEmotion = selectedEmotion
         self.present(vc, animated: true)
     }
+    
+    
     let themeSections: [DiaryThemeSection] = [
         DiaryThemeSection(question: "오늘의 기분은?", options: [
             DiaryThemeOption(title: "기쁨", iconName: "smiley"),
@@ -32,7 +41,7 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
             DiaryThemeOption(title: "여유로움", iconName: "tortoise"),
             DiaryThemeOption(title: "생산적이었음", iconName: "chart.bar"),
             DiaryThemeOption(title: "지쳤음", iconName: "bed.double"),
-            DiaryThemeOption(title: "생각이 많았음", iconName: "brain")
+            DiaryThemeOption(title: "생각이 많음", iconName: "brain")
         ]),
         
         DiaryThemeSection(question: "오늘 무엇을 했나요?", options: [
@@ -52,7 +61,7 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
             DiaryThemeOption(title: "바람", iconName: "wind")
         ]),
         
-        DiaryThemeSection(question: "누구와 보냈나요?", options: [
+        DiaryThemeSection(question: "누구와 함께 했나요?", options: [
             DiaryThemeOption(title: "혼자", iconName: "person"),
             DiaryThemeOption(title: "가족", iconName: "house"),
             DiaryThemeOption(title: "친구", iconName: "person.2"),
@@ -60,11 +69,11 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
             DiaryThemeOption(title: "동료", iconName: "briefcase")
         ]),
         
-        DiaryThemeSection(question: "기억에 남는 순간은?", options: [
+        DiaryThemeSection(question: "기억하고 싶은 순간은?", options: [
             DiaryThemeOption(title: "특별한 이벤트", iconName: "sparkles"),
             DiaryThemeOption(title: "감정적인 일", iconName: "face.smiling.inverse"),
             DiaryThemeOption(title: "인상 깊은 대화", iconName: "text.bubble"),
-            DiaryThemeOption(title: "배움이나 깨달음", iconName: "lightbulb"),
+            DiaryThemeOption(title: "배움과 깨달음", iconName: "lightbulb"),
             DiaryThemeOption(title: "안 좋았던 일", iconName: "exclamationmark.triangle")
         ])
     ]
@@ -94,6 +103,8 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
 
                 let timer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak collectionView] _ in
                     guard let cv = collectionView else { return }
+                    if cv.isDragging || cv.isDecelerating || cv.isTracking { return }
+
                     let offsetX = cv.contentOffset.x + randomSpeed
                     let maxOffsetX = cv.contentSize.width - cv.bounds.width
                     if offsetX >= maxOffsetX {
@@ -135,6 +146,7 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
             let layout = UICollectionViewFlowLayout()
             layout.scrollDirection = .horizontal
             layout.itemSize = CGSize(width: 120, height: 40)
+            layout.estimatedItemSize = .zero // 🔧 명시적으로 제거
             layout.minimumLineSpacing = 8
 
             let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -188,14 +200,17 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
         let itemWidth: CGFloat = 120 + 8
 
         if currentOffset < itemWidth {
-            // 왼쪽 끝 가까우면 중앙으로 이동
             let newOffset = currentOffset + itemWidth * CGFloat(original)
-            scrollView.contentOffset.x = newOffset
+            DispatchQueue.main.async {
+                collectionView.setContentOffset(CGPoint(x: newOffset, y: 0), animated: false)
+            }
         } else if currentOffset > contentWidth - itemWidth * CGFloat(original + 1) {
-            // 오른쪽 끝 가까우면 중앙으로 이동
             let newOffset = currentOffset - itemWidth * CGFloat(original)
-            scrollView.contentOffset.x = newOffset
+            DispatchQueue.main.async {
+                collectionView.setContentOffset(CGPoint(x: newOffset, y: 0), animated: false)
+            }
         }
+
     }
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -224,7 +239,17 @@ class EditViewController2: UIViewController, UICollectionViewDataSource, UIColle
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        selectedIndices[collectionView.tag] = indexPath.item
+        let tag = collectionView.tag
+        let previouslySelected = selectedIndices[tag]
+
+        if previouslySelected == indexPath.item {
+            // 👉 같은 셀을 다시 클릭하면 선택 해제
+            selectedIndices.removeValue(forKey: tag)
+        } else {
+            // 👉 새로운 셀 선택
+            selectedIndices[tag] = indexPath.item
+        }
+
         collectionView.reloadData()
 
         if let cell = collectionView.cellForItem(at: indexPath) {

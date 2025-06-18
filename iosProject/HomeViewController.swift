@@ -3,10 +3,13 @@ import FirebaseAuth
 import FirebaseFirestore
 
 
-
+protocol MemoCellDelegate: AnyObject {
+    func memoCellDidLongPress(_ cell: MemoCell)
+}
 // MARK: - Home View Controller
 class HomeViewController: UIViewController {
-    
+    // HomeViewController.swift 파일 상단, class HomeViewController 위에 추가
+  
     // --- Properties ---
     private var diaries: [Diary] = [] // Firestore에서 불러온 일기들을 저장할 배열
     private var listener: ListenerRegistration? // 실시간 업데이트를 위한 리스너
@@ -120,6 +123,38 @@ class HomeViewController: UIViewController {
             }
         }
     }
+    private func showDeleteConfirmationAlert(for diary: Diary) {
+        let alert = UIAlertController(title: "일기 삭제",
+                                      message: "'\(diary.title)' 일기를 정말 삭제하시겠습니까?",
+                                      preferredStyle: .alert)
+
+        let deleteAction = UIAlertAction(title: "삭제", style: .destructive) { [weak self] _ in
+            self?.deleteDiary(diary: diary)
+        }
+        let cancelAction = UIAlertAction(title: "취소", style: .cancel, handler: nil)
+
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+        present(alert, animated: true, completion: nil)
+    }
+    private func deleteDiary(diary: Diary) {
+        guard let userId = Auth.auth().currentUser?.uid, let diaryId = diary.id else {
+            print("⚠️ 사용자 ID 또는 일기 ID가 없습니다.")
+            return
+        }
+
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).collection("diaries").document(diaryId).delete { error in
+            if let error = error {
+                print("❌ 일기 삭제 실패: \(error.localizedDescription)")
+                // 사용자에게 실패 알림 표시 (선택 사항)
+            } else {
+                print("✅ 일기 삭제 완료: \(diary.title)")
+                // Firestore 리스너(addSnapshotListener)를 사용하고 있으므로,
+                // 데이터를 다시 fetch할 필요 없이 자동으로 collectionView가 업데이트됩니다.
+            }
+        }
+    }
 }
 
 // MARK: - CollectionView Delegate & DataSource
@@ -134,6 +169,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
         }
         let diary = diaries[indexPath.item]
         cell.configure(with: diary)
+        cell.delegate = self
         return cell
     }
     
@@ -151,25 +187,28 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedDiary = diaries[indexPath.item]
         print("선택된 일기: \(selectedDiary.title)")
-        // 1. 스토리보드에서 DiaryDetailViewController를 인스턴스화합니다.
-        // (스토리보드에 새로 만든 뷰 컨트롤러를 추가하고 Storyboard ID를 "DiaryDetailViewController"로 설정해야 합니다.)
         guard let detailVC = storyboard?.instantiateViewController(withIdentifier: "DiaryDetailViewController") as? DiaryDetailViewController else {
             return
         }
         
-        // 2. 선택된 일기(Diary) 객체를 detailVC의 diary 변수에 전달합니다.
         detailVC.diary = selectedDiary
         
-        // 3. 네비게이션 컨트롤러를 사용해 화면을 푸시(push)합니다.
         navigationController?.pushViewController(detailVC, animated: true)
     }
+    
 }
 
-
+extension HomeViewController: MemoCellDelegate {
+    func memoCellDidLongPress(_ cell: MemoCell) {
+        guard let indexPath = collectionView.indexPath(for: cell) else { return }
+        let diaryToDelete = diaries[indexPath.item]
+        showDeleteConfirmationAlert(for: diaryToDelete)
+    }
+}
 // MARK: - Memo Cell
 class MemoCell: UICollectionViewCell {
     static let identifier = "MemoCell"
-
+    weak var delegate: MemoCellDelegate?
     // --- UI Components ---
     private let dateLabel: UILabel = {
         let label = UILabel()
@@ -193,7 +232,11 @@ class MemoCell: UICollectionViewCell {
         label.numberOfLines = 2
         return label
     }()
-    
+    private func setupLongPressGesture() {
+          let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+          longPressGesture.minimumPressDuration = 0.5 // 0.5초 길게 누르면 인식
+          self.addGestureRecognizer(longPressGesture)
+      }
     private let tagsStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
@@ -215,6 +258,7 @@ class MemoCell: UICollectionViewCell {
         super.init(frame: frame)
         setupCell()
         setupLayout()
+        setupLongPressGesture()
     }
 
     required init?(coder: NSCoder) {
@@ -226,7 +270,11 @@ class MemoCell: UICollectionViewCell {
         // 재사용을 위해 태그 스택뷰를 비웁니다.
         tagsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
     }
-
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+          if gesture.state == .began { // 길게 누르기 시작했을 때 한 번만 호출
+              delegate?.memoCellDidLongPress(self) // ✅ 델리게이트에게 알림
+          }
+      }
     // MARK: - Setup
     private func setupCell() {
         backgroundColor = .systemBackground
@@ -271,10 +319,11 @@ class MemoCell: UICollectionViewCell {
         // 기존 태그들을 지우고 새로 추가
         tagsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         
-        diary.tags.forEach { tagText in
+        diary.tags?.forEach { tagText in
             let tagLabel = createTagLabel(with: tagText)
             tagsStackView.addArrangedSubview(tagLabel)
         }
+
         // 태그가 너무 많을 경우를 대비
         tagsStackView.addArrangedSubview(UIView())
     }

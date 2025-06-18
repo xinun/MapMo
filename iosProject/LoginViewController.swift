@@ -12,6 +12,9 @@ class LoginViewController: UIViewController {
         setupGoogleLoginButton()
     }
 
+    @IBOutlet weak var LogoImage: UIImageView!
+   
+    
     @objc func handleGoogleSignIn() {
         print("🟢 Google 버튼 눌림") // ← 이게 안 뜨면 버튼이 안 눌리는 상태!
 
@@ -55,22 +58,72 @@ class LoginViewController: UIViewController {
 
     func setupGoogleLoginButton() {
         let button = UIButton(type: .system)
-        button.setTitle("Google로 로그인", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = .red
-        button.layer.cornerRadius = 8
+        LogoImage.translatesAutoresizingMaskIntoConstraints = false
+           NSLayoutConstraint.activate([
+               LogoImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+               LogoImage.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 200), // ← 여기서 높이 조절
+               LogoImage.widthAnchor.constraint(equalToConstant: 220),
+               LogoImage.heightAnchor.constraint(equalToConstant: 220)
+           ])
+        // 구글 아이콘 설정
+        let icon = UIImage(named: "google")?.withRenderingMode(.alwaysOriginal)
+        let iconContainer = UIView()
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.backgroundColor = .white
+        iconContainer.layer.cornerRadius = 12
+        iconContainer.clipsToBounds = true
+
+        let iconView = UIImageView(image: icon)
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.contentMode = .scaleAspectFit
+        iconContainer.addSubview(iconView)
+
+        NSLayoutConstraint.activate([
+            iconView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
+            iconView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: 20),
+            iconView.heightAnchor.constraint(equalToConstant: 20),
+            iconContainer.widthAnchor.constraint(equalToConstant: 32),
+            iconContainer.heightAnchor.constraint(equalToConstant: 32)
+        ])
+
+        // 텍스트 설정
+        let label = UILabel()
+        label.text = "Google로 로그인"
+        label.textColor = .white
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        // 스택뷰
+        let stackView = UIStackView(arrangedSubviews: [iconContainer, label])
+        stackView.axis = .horizontal
+        stackView.spacing = 12
+        stackView.alignment = .center
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+
+        button.addSubview(stackView)
+        button.backgroundColor = .black
+        button.layer.cornerRadius = 10
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(handleGoogleSignIn), for: .touchUpInside)
         view.addSubview(button)
-        button.isUserInteractionEnabled = true
 
         NSLayoutConstraint.activate([
+            // 버튼 위치
+            
+            button.topAnchor.constraint(equalTo: LogoImage.bottomAnchor, constant: 80),
             button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            button.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             button.widthAnchor.constraint(equalToConstant: 250),
-            button.heightAnchor.constraint(equalToConstant: 50)
+            button.heightAnchor.constraint(equalToConstant: 50),
+
+            // 스택뷰 위치
+            stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
         ])
     }
+
+
+
 
     // ✅ 위에서 삭제한 자리에 이 새 함수를 붙여넣으세요.
     func moveToMainTabBar() {
